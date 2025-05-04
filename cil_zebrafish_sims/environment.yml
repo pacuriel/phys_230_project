@@ -1,0 +1,16 @@
+name: cil-env
+channels:
+  - conda-forge
+dependencies:
+  - python=3.9
+  - numpy
+  - pandas
+  - matplotlib
+  - scikit-image
+  - scipy
+  - cellpose
+  - tqdm
+  - tifffile
+  - imageio
+  - pip:
+      - trackpy
