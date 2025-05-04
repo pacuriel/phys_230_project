@@ -1,0 +1,13 @@
+name: cil-compat
+channels:
+  - conda-forge
+dependencies:
+  - python=3.9
+  - numpy=1.22
+  - scipy=1.8
+  - matplotlib
+  - cellpose=2.2
+  - scikit-image
+  - tifffile
+  - pandas
+  - tqdm
