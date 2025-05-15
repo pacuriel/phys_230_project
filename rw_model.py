@@ -1,3 +1,8 @@
+"""
+File to simulate MET process using random walk model. 
+Pablo Curiel
+May 2025
+"""
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -15,7 +20,7 @@ class SimMET:
             N: number of cells
             num_steps: number of time steps to simulate
             step_size: step cells should take in each direction
-            
+            bbox_size: bounding box size of figure to show of simulation
         """
         self.N = N
         self.num_steps = num_steps
@@ -81,8 +86,8 @@ def main():
     num_steps = 20
     step_size = 0.5
     
-    met_sim = SimMET(N=N, num_steps=num_steps, step_size=step_size)
-    met_sim.simulate()
+    met_sim = SimMET(N=N, num_steps=num_steps, step_size=step_size) # Simulation object
+    met_sim.simulate() # Running simulation
 
 if __name__ == "__main__":
     main()
