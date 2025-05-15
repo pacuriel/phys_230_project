@@ -1,2 +1,3 @@
-# phys_230_project
-Project files for PHYS-230 final project
+# Agent-Based Modeling of Cell Behavior (PHYS-230 Project)
+
+This repository contains files for Pablo Curiel and Darwin Martinez's project in PHYS-230 at UC Merced. 
