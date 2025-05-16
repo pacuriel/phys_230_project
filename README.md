@@ -59,11 +59,11 @@ This code was implemented and tested on a local machine running: Windows 11, Pyt
 
 ## Future Directions
 
-* Cell-level predictions instead of global simulation predictions (cells don't all transition at same time)
+* Cell-level predictions (instance) instead of global simulation-level predictions (semantic) (Real cells don't all transition at same time!)
 * Implement cell replication and sheet formation
-* Test simpler and more complex models
+* Test both simpler and more complex models
 * Confirm biological accuracy with biologists
 * Use expert-crafted features for model input instead of raw data
-* Test model trained on simulated on experimental data to assess generalizability  
+* Test model trained on simulated data on experimental data to assess its generalizability  
 
 For any further questions, suggestions, comments, etc. regarding files uploaded by `@pacuriel`, reach out to me via email: pcuriel@merced.edu
