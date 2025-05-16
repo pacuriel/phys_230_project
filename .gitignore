@@ -1,2 +1,6 @@
 UTF-8*
 .DS_*
+scratch
+sim_*
+*.pt
+__pycache__

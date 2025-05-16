@@ -1,7 +1,0 @@
-#*.tif
-#*.csv
-#*.mp4
-#*.gif
-__pycache__/
-*.pyc
-#.env/
