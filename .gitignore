@@ -2,3 +2,6 @@ UTF-8*
 .DS_*
 scratch
 sim_*
+experiments
+*.pt
+__pycache__
