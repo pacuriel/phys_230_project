@@ -5,6 +5,8 @@ May 2025
 """
 import numpy as np
 import matplotlib.pyplot as plt
+from datetime import datetime
+import os
 
 class SimMET:
     """Class to simulate MET process"""
@@ -15,7 +17,9 @@ class SimMET:
                  sim_met: bool = True,
                  interaction_radius: float = 2,
                  bbox_size: int = 10,
-                 show_paths: bool = True) -> None:
+                 show_paths: bool = True,
+                 save_sim_data: bool = True,
+                 save_sim_fig: bool = True) -> None:
         """
         SimMet class constructor to set up simulation.
 
@@ -29,21 +33,29 @@ class SimMET:
         self.N = N
         self.num_steps = num_steps
         self.step_size = step_size
-        self.sim_met = sim_met    
+        self.sim_met = sim_met
+        self.save_sim_data = save_sim_data
+        self.save_sim_fig = save_sim_fig
+        
+        self.seed = np.random.randint(0, 2**10) # Simulation seed
+        np.random.seed(seed=self.seed)
 
         # MET parameters
         if self.sim_met:
             self.interaction_radius = interaction_radius # Radius for cells to interact
-
 
         self.bbox_size = bbox_size
         self.show_paths = show_paths
 
         self.set_sim_vars()
 
+    def gen_sim_name(self):
+        time = datetime.now().strftime("%Y%m%d-%H%M%S")
+        self.sim_name = f"sim_N{self.N}_steps{self.num_steps}_step{self.step_size}_met{self.sim_met}_seed{self.seed}_{time}"
+
     def set_sim_vars(self):
         """Set variables relevant to simulations."""
-        # self.positions = np.zeros((self.N, 2)) # Initializing cell positions
+        self.gen_sim_name()
         self.positions = np.random.uniform(-self.bbox_size // 2, self.bbox_size // 2, size=(self.N, 2))
         self.angles = np.random.rand(self.N) * 2 * np.pi
         self.trajectories = np.zeros((self.num_steps, self.N, 2))  # to store trails
@@ -118,10 +130,10 @@ class SimMET:
         self.start_met = int(self.num_steps * 0.2) # Starting MET process at 20% of time steps
         self.full_met = int(self.num_steps * 0.6) # Boosting MET process at 60% time steps
         self.noise_list = [1.2, 0.8, 0.4] # List of noise values to apply
-
+        self.interaction_radius_list = [self.bbox_size * 0.1, self.bbox_size * 0.8]
         if t < self.start_met:
             self.sim_met = False # Flag whether MET is active
-            self.interaction_radius = 0.2 # Small interaction radius
+            self.interaction_radius = self.interaction_radius_list[0] # Small interaction radius
             self.noise = self.noise_list[0]  # Increased randomness
         elif self.start_met <= t < self.full_met:
             self.sim_met = True
@@ -129,8 +141,50 @@ class SimMET:
             self.noise = self.noise_list[1] # Less random
         else:
             self.sim_met = True
-            self.interaction_radius = self.bbox_size * 0.8  # Increased interaction radius
+            self.interaction_radius = self.interaction_radius_list[1]  # Increased interaction radius
             self.noise = self.noise_list[2]  # Less random, more cohesive movement
+
+    def extract_global_features(self, trajectories: np.ndarray) -> dict:
+        """Extacts features from simulation and stores in dictionary."""
+        # Basic speed and displacement
+        displacements = np.diff(trajectories, axis=0)
+        speeds = np.linalg.norm(displacements, axis=2)
+        avg_speed = speeds.mean()
+
+        # Pairwise distances at final time step
+        final_pos = trajectories[-1]
+        dists = np.linalg.norm(final_pos[:, None, :] - final_pos[None, :, :], axis=-1)
+        avg_pairwise_dist = dists[np.triu_indices_from(dists, k=1)].mean()
+
+        return {
+            "avg_speed": avg_speed,
+            "avg_pairwise_dist": avg_pairwise_dist,
+            # Add more as needed
+        }
+    
+    def save_simulation_data(self, save_dir: str = "./sim_data") -> None:
+        """Save simulation data to an npz file with metadata and features."""
+        os.makedirs(save_dir, exist_ok=True)
+
+        self.features = self.extract_global_features(self.trajectories)
+        
+        self.metadata = {"N": self.N, 
+                         "num_steps": self.num_steps,
+                         "step_size": self.step_size,
+                         "seed": self.seed,
+                         "sim_met": self.sim_met,
+                         "start_met": self.start_met,
+                         "full_met": self.full_met,
+                         "start_radius": self.interaction_radius_list[0],
+                         "end_radius": self.interaction_radius_list[1]}
+        
+        file_path = os.path.join(save_dir, (self.sim_name + ".npz"))
+        
+        print(f"Saving simulation data to {file_path}")
+        np.savez(file_path, 
+                 trajectories=self.trajectories, 
+                 features=self.features, 
+                 metadata=self.metadata) # Saving simulation data
 
     def simulate(self) -> None:
         """Simulate MET using agent-based model."""
@@ -159,16 +213,26 @@ class SimMET:
             self.ax.set_title(f"MET Simulation (t={t}, MET stage = {met_state})")
             plt.pause(0.1) # Pausing 
         
-        plt.show()
+        # Saving simulation figure
+        if self.save_sim_fig:
+            plt.savefig(os.path.join("./sim_figs", (self.sim_name + ".png")))
+        
+        plt.clf() # Close figure
+
+        # Saving simulation data
+        if self.save_sim_data:
+            self.save_simulation_data()
 
 
 def main():
     # Sim parameters
-    N = 100
+    N = 10
     num_steps = 100
     step_size = 1
+    sim_met = True
+    interaction_radius = 2
     
-    met_sim = SimMET(N=N, num_steps=num_steps, step_size=step_size, bbox_size=100) # Simulation object
+    met_sim = SimMET(N=N, num_steps=num_steps, step_size=step_size, sim_met=sim_met, interaction_radius=interaction_radius, bbox_size=10) # Simulation object
     met_sim.simulate() # Running simulation
 
 if __name__ == "__main__":
