@@ -48,7 +48,7 @@ class SimMET:
         self.angles = np.random.rand(self.N) * 2 * np.pi
         self.trajectories = np.zeros((self.num_steps, self.N, 2))  # to store trails
 
-        self.noise = 0.3 # Noise for increased randomness
+        self.noise = 1.2 # Noise for increased randomness
         
         self.setup_plotting() # Settting plotting variables
         
@@ -68,7 +68,8 @@ class SimMET:
         if self.show_paths:
             self.trails = [self.ax.plot([], [], '-', color=self.colors[i], alpha=0.5)[0] for i in range(self.N)]
 
-    def get_new_angles(self):
+    def get_new_angles(self) -> np.ndarray:
+        """Obtains new direction angles for cells."""
         new_angles = np.zeros(self.N)
 
         # Loop over all cells
@@ -97,14 +98,52 @@ class SimMET:
         
         return new_angles 
 
+    def apply_bounds(self) -> None:
+        """Bounds cells inside of plot region by bouncing off walls."""
+        # Loop over cell
+        for i in range(self.N):
+            # Loop over both (x,y) coords
+            for dim in range(2):  # 0 = x, 1 = y
+                if self.positions[i, dim] > self.bbox_size:
+                    self.positions[i, dim] = 2 * self.bbox_size - self.positions[i, dim]
+                    self.angles[i] = np.pi - self.angles[i] if dim == 0 else -self.angles[i]
+                elif self.positions[i, dim] < -self.bbox_size:
+                    self.positions[i, dim] = -2 * self.bbox_size - self.positions[i, dim]
+                    self.angles[i] = np.pi - self.angles[i] if dim == 0 else -self.angles[i]
+
+    def update_met_state(self, t: int):
+        """
+        Update MET parameters based on time step.
+        """
+        self.start_met = int(self.num_steps * 0.2) # Starting MET process at 20% of time steps
+        self.full_met = int(self.num_steps * 0.6) # Boosting MET process at 60% time steps
+        self.noise_list = [1.2, 0.8, 0.4] # List of noise values to apply
+
+        if t < self.start_met:
+            self.sim_met = False # Flag whether MET is active
+            self.interaction_radius = 0.2 # Small interaction radius
+            self.noise = self.noise_list[0]  # Increased randomness
+        elif self.start_met <= t < self.full_met:
+            self.sim_met = True
+            self.interaction_radius = 3 + (t - self.start_met) * 0.1  # Gradually increasing radius
+            self.noise = self.noise_list[1] # Less random
+        else:
+            self.sim_met = True
+            self.interaction_radius = self.bbox_size * 0.8  # Increased interaction radius
+            self.noise = self.noise_list[2]  # Less random, more cohesive movement
+
     def simulate(self) -> None:
         """Simulate MET using agent-based model."""
         # Loop over time steps
         for t in range(self.num_steps): 
+            self.update_met_state(t=t) # Updating state of MET process
+
             # Update direction angles, positions, trajectories/paths
             self.angles = self.get_new_angles()
             self.positions[:, 0] += self.step_size * np.cos(self.angles)
             self.positions[:, 1] += self.step_size * np.sin(self.angles)
+            self.apply_bounds() # Boudning cells inside region
+            
             self.trajectories[t] = self.positions
 
             # Loop over cells
@@ -114,8 +153,10 @@ class SimMET:
                 
                 if self.show_paths:
                     self.trails[i].set_data(self.trajectories[:t+1, i, 0], self.trajectories[:t+1, i, 1])
-    
-            self.ax.set_title(f"Multi-cell Random Walk (t={t})") # Plot title
+
+            met_state = "None" if not self.sim_met else (
+                "Partial" if t < self.full_met else "Full")
+            self.ax.set_title(f"MET Simulation (t={t}, MET stage = {met_state})")
             plt.pause(0.1) # Pausing 
         
         plt.show()
@@ -123,11 +164,11 @@ class SimMET:
 
 def main():
     # Sim parameters
-    N = 10
+    N = 100
     num_steps = 100
-    step_size = 0.5
+    step_size = 1
     
-    met_sim = SimMET(N=N, num_steps=num_steps, step_size=step_size) # Simulation object
+    met_sim = SimMET(N=N, num_steps=num_steps, step_size=step_size, bbox_size=100) # Simulation object
     met_sim.simulate() # Running simulation
 
 if __name__ == "__main__":
