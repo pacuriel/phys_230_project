@@ -10,13 +10,12 @@ from tqdm import tqdm
 from rw_model import SimMET
 
 def generate_sim_data(num_samples: int, 
-                      save_dir: str = "./mlp_data",
                       N: int = 40,
                       num_steps: int = 100,
                       step_size: float = 1.0,
                       bbox_size: int = 10.0):
     
-    os.makedirs(save_dir, exist_ok=True)
+    # os.makedirs(save_dir, exist_ok=True)
 
     # Loop over each number of sample to generate
     for i in tqdm(range(num_samples)):
@@ -28,7 +27,7 @@ def generate_sim_data(num_samples: int,
         start_met = int(start_met_frac * num_steps)
         full_met = int(full_met_frac * num_steps)
 
-        noise_list = sorted(np.random.uniform(0.2, 1.5, size=3)[::-1])  # Descending noise
+        noise_list = sorted(np.random.uniform(0.2, 1.5, size=3), reverse=True)  # Descending noise
 
         # Interaction radius list
         interaction_radius_list = sorted([
@@ -53,12 +52,10 @@ def generate_sim_data(num_samples: int,
         sim.interaction_radius_list = interaction_radius_list
 
         sim.simulate()
-        sim.save_simulation_data(save_dir=save_dir)
-
 
 
 def main():
-    num_samples = 1000
+    num_samples = 9000
 
     generate_sim_data(num_samples=num_samples)
 

@@ -133,7 +133,8 @@ class SimMET:
         """
         Update MET parameters based on time step.
         """
-        if self.start_met is None or self.full_met:
+        # Checking if MET variables are set, if not setting
+        if self.start_met is None or self.full_met is None:
             self.start_met = int(self.num_steps * 0.2) # Starting MET process at 20% of time steps
             self.full_met = int(self.num_steps * 0.6) # Boosting MET process at 60% time steps
         if self.noise_list is None:
@@ -141,6 +142,7 @@ class SimMET:
         if self.interaction_radius_list is None:
             self.interaction_radius_list = [self.bbox_size * 0.1, self.bbox_size * 0.8]
 
+        # If statements for different states of MET
         if t < self.start_met:
             self.sim_met = False # Flag whether MET is active
             self.interaction_radius = self.interaction_radius_list[0] # Small interaction radius
