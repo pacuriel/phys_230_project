@@ -30,7 +30,7 @@ This aim was focused on trying to use machine learning (ML) to infer key paramet
 
 ### Simulated Dataset
 
-We ran 10,000 simulations to form our dataset. Due to MLP's fixed input size, all simulations had $N=40$ cells and $T = 100$ time steps, which is biologically consistent with the data provided by Dr. Woo's lab. The seven parameters to be predicted were varied for all simulations. For simplicity, we chose to use the raw trajectory data as input (bad choice). Each simulation results in a trajectory tensor of form $X \in \mathbb{R}^{N \times T \times 2}$. The MLP flattens this into a vector of size $2NT$ (= 8,000 for our case) for its input. The data was generated using the `gen_sim_data.py` file. 
+We ran 10,000 simulations to form our dataset. Due to MLP's fixed input size, all simulations had $N=40$ cells and $T = 100$ time steps, which is biologically consistent with the data provided by Dr. Woo's lab. The seven parameters to be predicted were varied for all simulations. For simplicity, we chose to use the raw trajectory data as input (bad choice). Each simulation results in a trajectory tensor of form $X \in \mathbb{R}^{N \times T \times 2}$. The MLP flattens this into a vector of size $2NT$ (= 8,000 for our case) for its input. The data was generated using the `gen_sim_data.py` file. The 10,000 trajectory data files can all be found [here](https://drive.google.com/drive/folders/1SAzFnHzn2XKviigVsDmrKHYZm4s7VWyn?usp=sharing) (enjoy!).
 
 ### MLP Structure
 
