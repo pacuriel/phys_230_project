@@ -19,7 +19,9 @@ class SimMET:
                  bbox_size: int = 10,
                  show_paths: bool = True,
                  save_sim_data: bool = True,
-                 save_sim_fig: bool = True) -> None:
+                 save_sim_fig: bool = True,
+                 seed: int = None,
+                 display_plot: bool = True) -> None:
         """
         SimMet class constructor to set up simulation.
 
@@ -36,8 +38,11 @@ class SimMET:
         self.sim_met = sim_met
         self.save_sim_data = save_sim_data
         self.save_sim_fig = save_sim_fig
+        self.display_plot = display_plot
         
-        self.seed = np.random.randint(0, 2**10) # Simulation seed
+        self.seed = seed
+        if self.seed is None:
+            self.seed = np.random.randint(0, 2**10) # Simulation seed
         np.random.seed(seed=self.seed)
 
         # MET parameters
@@ -62,7 +67,8 @@ class SimMET:
 
         self.noise = 1.2 # Noise for increased randomness
         
-        self.setup_plotting() # Settting plotting variables
+        if self.display_plot:
+            self.setup_plotting() # Settting plotting variables
         
     def setup_plotting(self):
         """Setting up plotting variables."""
@@ -127,10 +133,14 @@ class SimMET:
         """
         Update MET parameters based on time step.
         """
-        self.start_met = int(self.num_steps * 0.2) # Starting MET process at 20% of time steps
-        self.full_met = int(self.num_steps * 0.6) # Boosting MET process at 60% time steps
-        self.noise_list = [1.2, 0.8, 0.4] # List of noise values to apply
-        self.interaction_radius_list = [self.bbox_size * 0.1, self.bbox_size * 0.8]
+        if self.start_met is None or self.full_met:
+            self.start_met = int(self.num_steps * 0.2) # Starting MET process at 20% of time steps
+            self.full_met = int(self.num_steps * 0.6) # Boosting MET process at 60% time steps
+        if self.noise_list is None:
+            self.noise_list = [1.2, 0.8, 0.4] # List of noise values to apply
+        if self.interaction_radius_list is None:
+            self.interaction_radius_list = [self.bbox_size * 0.1, self.bbox_size * 0.8]
+
         if t < self.start_met:
             self.sim_met = False # Flag whether MET is active
             self.interaction_radius = self.interaction_radius_list[0] # Small interaction radius
@@ -175,12 +185,15 @@ class SimMET:
                          "sim_met": self.sim_met,
                          "start_met": self.start_met,
                          "full_met": self.full_met,
+                         "noise_1": self.noise_list[0],
+                         "noise_2": self.noise_list[1],
+                         "noise_3": self.noise_list[2],
                          "start_radius": self.interaction_radius_list[0],
                          "end_radius": self.interaction_radius_list[1]}
         
         file_path = os.path.join(save_dir, (self.sim_name + ".npz"))
         
-        print(f"Saving simulation data to {file_path}")
+        # print(f"Saving simulation data to {file_path}")
         np.savez(file_path, 
                  trajectories=self.trajectories, 
                  features=self.features, 
@@ -201,20 +214,22 @@ class SimMET:
             self.trajectories[t] = self.positions
 
             # Loop over cells
-            for i in range(self.N):
-                # Update cell plots
-                self.scatters[i].set_data([self.positions[i, 0]], [self.positions[i, 1]]) 
-                
-                if self.show_paths:
-                    self.trails[i].set_data(self.trajectories[:t+1, i, 0], self.trajectories[:t+1, i, 1])
+            if self.display_plot:
+                for i in range(self.N):
+                    # Update cell plots
+                    self.scatters[i].set_data([self.positions[i, 0]], [self.positions[i, 1]]) 
+                    
+                    if self.show_paths:
+                        self.trails[i].set_data(self.trajectories[:t+1, i, 0], self.trajectories[:t+1, i, 1])
 
-            met_state = "None" if not self.sim_met else (
-                "Partial" if t < self.full_met else "Full")
-            self.ax.set_title(f"MET Simulation (t={t}, MET stage = {met_state})")
-            plt.pause(0.1) # Pausing 
+                met_state = "None" if not self.sim_met else (
+                    "Partial" if t < self.full_met else "Full")
+                
+                self.ax.set_title(f"MET Simulation (t={t}, MET stage = {met_state})")
+                plt.pause(0.1) # Pausing 
         
         # Saving simulation figure
-        if self.save_sim_fig:
+        if self.save_sim_fig and self.display_plot:
             plt.savefig(os.path.join("./sim_figs", (self.sim_name + ".png")))
         
         plt.clf() # Close figure
@@ -232,7 +247,11 @@ def main():
     sim_met = True
     interaction_radius = 2
     
-    met_sim = SimMET(N=N, num_steps=num_steps, step_size=step_size, sim_met=sim_met, interaction_radius=interaction_radius, bbox_size=10) # Simulation object
+    # Simulation object
+    met_sim = SimMET(N=N, 
+                     num_steps=num_steps, 
+                     step_size=step_size, 
+                     bbox_size=10) 
     met_sim.simulate() # Running simulation
 
 if __name__ == "__main__":
